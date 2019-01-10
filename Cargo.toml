@@ -1,0 +1,8 @@
+[package]
+name = "rusty-brain"
+version = "0.1.0"
+authors = ["Pe6oProgramista <p.milev3@gmail.com>"]
+
+[dependencies]
+regex = "1.0.6"
+ndarray = "0.12.1"
