@@ -13,16 +13,27 @@ use supervised::regression as rg;
 
 pub mod neural_networks;
 use neural_networks::layer::*;
+use neural_networks::optimizers::*;
 
 fn main() {
-    let inp = ArrayD::<f64>::zeros(IxDyn(&[5, 4]));
-    let layer = Dense{ input_shape: inp.shape().to_vec(), units: 1, ..Dense::new(&inp.shape().to_vec(), 1) };
-    let layer2 = Activation{ func_name: "zdr".to_string() };
+    let mut input = ArrayD::<f64>::zeros(IxDyn(&[1, 3]));
 
-    let v: Vec<Box<LayerTrait>> = vec![Box::new(layer), Box::new(layer2)];
+    let o = input.map(|x| { 1. / (1. + f64::exp(-x)) });
+    println!("{:?}", o);
 
-    println!("{:?} - {:?}", v[0].get_input_shape(), v[0].get_output_shape());
+    // let inp = ArrayD::<f64>::zeros(IxDyn(&[5, 4]));
+    // let mut layer = Dense{ input_shape: inp.shape().to_vec(), units: 1, optimizer: SGD{momentum: 0.5, ..Default::default()} , ..Default::default() };
+    // let layer2 = Activation{ func_name: "zdr".to_string() };
 
+    // let v: Vec<Box<LayerTrait>> = vec![Box::new(layer), Box::new(layer2)];
+
+    // println!("{:?} - {:?}", v[0].get_input_shape(), v[0].get_output_shape());
+    // let mut kr = layer.optimizer.run(ArrayD::<f64>::zeros(IxDyn(&[1, 4])), 5.);
+    // kr[[0, 0]] = 3.2;
+
+    // println!("{:?}", kr);
+
+    return;
     rg::gg();
     let mut learning_rate = 0.001;
     let input_n = 13;

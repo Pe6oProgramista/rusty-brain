@@ -2,19 +2,35 @@ use ndarray::prelude::*;
 use super::{LayerTrait, Dense};
 use neural_networks::optimizers::*;
 
-impl Dense {
-    pub fn new(input_shape: &Vec<usize>, units: usize) -> Dense {
+impl Dense<SGD> {
+    pub fn new(input_shape: &Vec<usize>, units: usize) -> Self {
         Dense {
             input: arr1(&[]).into_dyn(),
             input_shape: input_shape.clone(),
             units: units,
             weights: ArrayD::<f64>::zeros(IxDyn(input_shape.clone().as_slice())),
-            optimizer: Box::new(SGD { a: 5 })
+            optimizer: SGD { ..Default::default() },
+            activation_fn: Default::default()
         }
     }
 }
 
-impl LayerTrait for Dense {
+impl Default for Dense<SGD> {
+    fn default() -> Self {
+        Dense {
+            input: arr1(&[]).into_dyn(),
+            input_shape: Vec::new(),
+            units: 0,
+            weights: arr1(&[]).into_dyn(),
+            optimizer: SGD { ..Default::default()},
+            activation_fn: Default::default()
+        }
+    }
+}
+
+impl<T> LayerTrait for Dense<T>
+    where T: Optimizer
+{
     fn get_input_shape(&self) -> Vec<usize> {
         self.input_shape.clone()
     }

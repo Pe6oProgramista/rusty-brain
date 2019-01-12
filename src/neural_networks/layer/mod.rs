@@ -1,5 +1,6 @@
 use ndarray::prelude::*;
 use super::optimizers::*;
+use super::activation_functions::*;
 
 pub mod dense;
 pub mod activation;
@@ -26,14 +27,18 @@ pub trait LayerTrait {
     fn backward_prop(&mut self, gradient: ArrayD<f64>) {}
 }
 
-pub struct Dense {
+pub struct Dense<T>
+    where T: Optimizer
+{
     pub input: ArrayD<f64>,
     pub input_shape: Vec<usize>,
     pub units: usize,
     pub weights: ArrayD<f64>,
-    pub optimizer: Box<Optimizer>
+    pub optimizer: T,
+    pub activation_fn: ActivationFn
 }
 
 pub struct Activation {
-    pub func_name: String
+    pub input_shape: Vec<usize>,
+    pub activation_fn: ActivationFn
 }
