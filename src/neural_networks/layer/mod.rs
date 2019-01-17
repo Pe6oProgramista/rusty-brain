@@ -3,42 +3,37 @@ use super::optimizers::*;
 use super::activation_functions::*;
 
 pub mod dense;
-pub mod activation;
 
-pub trait LayerTrait {
-    fn get_input_shape(&self) -> Vec<usize> {
-    vec![]
-    }
+pub trait LayerTrait<O>
+    where O: Optimizer
+{
+    fn get_input_shape(&self) -> Vec<usize>;
 
-    fn set_input_shape(&mut self, shape: &Vec<usize>) {}
+    fn set_input_shape(&mut self, shape: &Vec<usize>);
 
-    fn get_output_shape(&self) -> Vec<usize> {
-        vec![]
-    }
+    fn get_output_shape(&self) -> Vec<usize>;
 
-    fn set_units(&mut self, units: usize) {}
+    fn set_units(&mut self, units: usize);
 
-    fn parameters(&self) -> usize {
-        0
-    }
+    fn set_optimizer(&mut self, optimizer: &O);
 
-    fn forward_prop(&mut self, input: ArrayD<f64>) {}
+    fn init_weights(&mut self);
 
-    fn backward_prop(&mut self, gradient: ArrayD<f64>) {}
+    fn parameters(&self) -> usize;
+
+    fn forward_prop(&mut self, input: &Array2<f64>) -> Array2<f64>;
+
+    fn backward_prop(&mut self, gradient: &Array2<f64>) -> Array2<f64>;
 }
 
-pub struct Dense<T>
-    where T: Optimizer
+pub struct Dense<O>
+    where O: Optimizer
 {
-    pub input: ArrayD<f64>,
+    pub input: Array2<f64>,
+    pub output: Array2<f64>,
     pub input_shape: Vec<usize>,
     pub units: usize,
-    pub weights: ArrayD<f64>,
-    pub optimizer: T,
-    pub activation_fn: ActivationFn
-}
-
-pub struct Activation {
-    pub input_shape: Vec<usize>,
+    pub weights: Array2<f64>,
+    pub optimizer: O,
     pub activation_fn: ActivationFn
 }

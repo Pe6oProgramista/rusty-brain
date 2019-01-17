@@ -5,17 +5,20 @@ pub enum ActivationFn {
 }
 
 impl ActivationFn {
-    fn run(&self, input: ArrayD<f64>) -> ArrayD<f64> {
+    pub fn run(&self, prediction: &Array2<f64>) -> Array2<f64> {
         match self {
-            ActivationFn::Sigmoid => input.map(|x| { 1. / (1. + f64::exp(-x)) }),
-            _ => input.clone()
+            ActivationFn::Sigmoid => prediction.map(|x| { 1. / (1. + f64::exp(-x)) }),
+            _ => prediction.clone()
         }
     }
 
-    fn gradient(&self, input: ArrayD<f64>) -> ArrayD<f64> {
+    pub fn gradient(&self, prediction: &Array2<f64>) -> Array2<f64> {
         match self {
-            ActivationFn::Sigmoid => self.run(input.clone()) * (1. - self.run(input.clone())),
-            _ => input.clone()
+            ActivationFn::Sigmoid => {
+                let prediction = self.run(prediction);
+                prediction.map(|x| { x * (1. - x) })
+            },
+            _ => prediction.clone()
         }
     }
 }
