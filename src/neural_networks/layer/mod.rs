@@ -4,20 +4,28 @@ use super::activation_functions::*;
 
 pub mod dense;
 
-pub trait LayerTrait<O>
+pub trait LayerTrait<O> : Clone
     where O: Optimizer
 {
     fn get_input_shape(&self) -> Vec<usize>;
 
-    fn set_input_shape(&mut self, shape: &Vec<usize>);
+    fn set_input_shape<'a>(&'a mut self, shape: &Vec<usize>) -> &'a mut Self;
 
     fn get_output_shape(&self) -> Vec<usize>;
 
-    fn set_units(&mut self, units: usize);
+    fn set_units<'a>(&'a mut self, units: usize) -> &'a mut Self;
 
-    fn set_optimizer(&mut self, optimizer: &O);
+    fn get_optimizer(&self) -> O;
 
-    fn init_weights(&mut self);
+    fn set_optimizer<'a>(&'a mut self, optimizer: &O) -> &'a mut Self;
+
+    fn get_activation_fn(&self) -> ActivationFn;
+
+    fn set_activation_fn<'a>(&'a mut self, activation_fn: &ActivationFn) -> &'a mut Self;
+
+    fn get_weights(&self) -> Array2<f64>;
+
+    fn init_weights<'a>(&'a mut self) -> &'a mut Self;
 
     fn parameters(&self) -> usize;
 
@@ -26,14 +34,15 @@ pub trait LayerTrait<O>
     fn backward_prop(&mut self, gradient: &Array2<f64>) -> Array2<f64>;
 }
 
+#[derive(Clone)]
 pub struct Dense<O>
     where O: Optimizer
 {
-    pub input: Array2<f64>,
-    pub output: Array2<f64>,
-    pub input_shape: Vec<usize>,
-    pub units: usize,
-    pub weights: Array2<f64>,
-    pub optimizer: O,
-    pub activation_fn: ActivationFn
+    input: Array2<f64>,
+    output: Array2<f64>,
+    input_shape: Vec<usize>,
+    units: usize,
+    weights: Array2<f64>,
+    optimizer: O,
+    activation_fn: ActivationFn
 }

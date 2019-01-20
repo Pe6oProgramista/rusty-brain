@@ -6,7 +6,6 @@ impl Optimizer for SGD {
         if self.velocity.shape() == &[1, 0] {
             self.velocity = Array2::zeros(weights.dim());
         }
-        // println!("v{:?} - g{:?}", self.velocity.shape(), gradient.shape());
 
         assert!(self.momentum >= 0. && self.momentum <= 1., "momentum not in range [0, 1]");
 
@@ -19,8 +18,8 @@ impl Optimizer for SGD {
 impl Default for SGD {
     fn default() -> SGD {
         SGD {
-            learning_rate: 0.01,
-            momentum: 0.,
+            learning_rate: 0.000001,
+            momentum: 0.6,
             decay: 0.,
             nesterov: false,
             velocity: arr2(&[[]])

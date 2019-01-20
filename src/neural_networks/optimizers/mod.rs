@@ -2,7 +2,7 @@ use ndarray::prelude::*;
 
 pub mod sgd;
 
-pub trait Optimizer: Clone {
+pub trait Optimizer : Clone {
     fn run(&mut self, weights: &Array2<f64>, gradient: &Array2<f64>) -> Array2<f64>;
 }
 

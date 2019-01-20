@@ -19,15 +19,69 @@ use neural_networks::activation_functions::*;
 use neural_networks::loss_functions::*;
 
 fn main() {
-    let mut network: NeuralNetwork<Dense<SGD>, SGD> = NeuralNetwork{ ..Default::default() };
-    network.add(Dense{input_shape: vec![1, 2], units: 5, ..Default::default()});
-    network.add(Dense{units: 1, ..Default::default()});
+    let mut network = NeuralNetwork::new();
+    network.add(Dense::new().set_input_shape(&vec![26, 2]).set_units(2).set_activation_fn(&ActivationFn::Linear).build());
+    network.add(Dense::new().set_units(1).set_activation_fn(&ActivationFn::Linear).build());
 
-    let input = arr2(&[[1., 2.]]);
+    let input = arr2(&[[1., 2.],
+                    [2., 3.],
+                    [3., 4.],
+                    [4., 5.],
+                    [5., 6.],
+                    [6., 7.],
+                    [7., 8.],
+                    [8., 9.],
+                    [9., 10.],
+                    [10., 11.],
+                    [11., 12.],
+                    [12., 13.],
+                    [13., 14.],
+                    [14., 15.],
+                    [15., 16.],
+                    [16., 17.],
+                    [17., 18.],
+                    [18., 19.],
+                    [19., 20.],
+                    [20., 21.],
+                    [21., 22.],
+                    [22., 23.],
+                    [23., 24.],
+                    [24., 25.],
+                    [25., 26.],
+                    [26., 27.]]);
 
-    network.forward_prop(&input);
-    network.backward_prop(&Array2::ones((1, 1)));
-    println!("n{}", network.parameters());
+    let output = arr2(&[[21.],
+                        [35.],
+                        [49.],
+                        [63.],
+                        [77.],
+                        [91.],
+                        [105.],
+                        [119.],
+                        [133.],
+                        [147.],
+                        [161.],
+                        [175.],
+                        [189.],
+                        [203.],
+                        [217.],
+                        [231.],
+                        [245.],
+                        [259.],
+                        [273.],
+                        [287.],
+                        [301.],
+                        [315.],
+                        [329.],
+                        [343.],
+                        [357.],
+                        [371.]]);
+
+    network.fit(&input, &output, 26, 1_000);
+
+    let test = arr2(&[[27., 28.]]);
+    let p = network.predict(&test);
+    println!("----{:?}", p);
 
     return;
     rg::gg();
