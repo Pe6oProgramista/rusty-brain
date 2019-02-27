@@ -1,11 +1,12 @@
 use ndarray::prelude::*;
 use ndarray::Zip;
+use rand::prelude::*;
 
 use super::{LayerTrait, Dense};
 use neural_networks::optimizers::*;
 use neural_networks::activation_functions::*;
 
-impl Dense<SGD> {
+impl Dense {
     pub fn new() -> Self {
         Default::default()
     }
@@ -15,7 +16,7 @@ impl Dense<SGD> {
     }
 }
 
-impl Default for Dense<SGD> {
+impl Default for Dense {
     fn default<'a>() -> Self {
         Dense {
             input: arr2(&[[]]),
@@ -23,15 +24,13 @@ impl Default for Dense<SGD> {
             input_shape: Vec::new(),
             units: 0,
             weights: arr2(&[[]]),
-            optimizer: SGD { ..Default::default() },
+            optimizer: Default::default(),
             activation_fn: Default::default()
         }
     }
 }
 
-impl<O> LayerTrait<O> for Dense<O>
-    where O: Optimizer
-{
+impl LayerTrait for Dense {
     fn get_input_shape(&self) -> Vec<usize> {
         self.input_shape.clone()
     }
@@ -40,7 +39,6 @@ impl<O> LayerTrait<O> for Dense<O>
         self.input_shape = shape.clone();
         self.input_shape[1] += 1;
         self
-        // self.init_weights()
     }
 
     fn get_output_shape(&self) -> Vec<usize> {
@@ -54,14 +52,13 @@ impl<O> LayerTrait<O> for Dense<O>
     fn set_units<'a>(&'a mut self, units: usize) -> &'a mut Self {
         self.units = units;
         self
-        // self.init_weights()
     }
 
-    fn get_optimizer(&self) -> O {
+    fn get_optimizer(&self) -> Optimizer {
         self.optimizer.clone()
     }
 
-    fn set_optimizer<'a>(&'a mut self, optimizer: &O) -> &'a mut Self {
+    fn set_optimizer<'a>(&'a mut self, optimizer: &Optimizer) -> &'a mut Self {
         self.optimizer = optimizer.clone();
         self
     }
@@ -80,16 +77,19 @@ impl<O> LayerTrait<O> for Dense<O>
     }
 
     fn init_weights<'a>(&'a mut self) -> &'a mut Self {
-        if(self.input_shape != vec![]) {
-            self.weights = Array::linspace(0., 10. * self.units as f64, self.units * self.input_shape[1])
-                .into_shape((self.units, self.input_shape[1]))
-                .unwrap();
+        if(self.input_shape != vec![]) { 
+            self.weights = unsafe { Array2::<f64>::uninitialized((self.units, self.input_shape[1])) };
+            Zip::from(&mut self.weights).apply(|x| *x = 2. * random::<f64>() - 1.);
+            
+            // self.weights = Array::linspace(-1., 1., self.units * self.input_shape[1])
+            //     .into_shape((self.units, self.input_shape[1]))
+            //     .unwrap();
         }
         self
     }
 
     fn parameters(&self) -> usize {
-        self.weights.shape().iter().fold(1,|a, &b| a * b)
+        self.weights.shape().iter().fold(1,|acc, &x| acc * x)
     }
 
     fn forward_prop(&mut self, input: &Array2<f64>) -> Array2<f64> {
@@ -108,10 +108,10 @@ impl<O> LayerTrait<O> for Dense<O>
     fn backward_prop(&mut self, gradient: &Array2<f64>) -> Array2<f64> {
         let mut gradient = gradient.clone();
         let activation_grad = self.activation_fn.gradient(&self.output);
-        Zip::from(&mut gradient).and(&activation_grad).apply(|a, &b| *a *= b);
+        gradient = &gradient * &activation_grad;
         let weights = self.weights.clone();
 
-        let grad_wrt_w = gradient.clone().reversed_axes().dot(&self.input);
+        let grad_wrt_w = gradient.clone().reversed_axes().dot(&self.input) / gradient.shape()[0] as f64;
         self.weights = self.optimizer.run(&self.weights, &grad_wrt_w);
 
         gradient.dot(&weights).slice_move(s![.., 1..])

@@ -1,7 +1,7 @@
 use ndarray::prelude::*;
-use super::{Optimizer, SGD};
+use super::{IsOptimizer, Momentum};
 
-impl Optimizer for SGD {
+impl IsOptimizer for Momentum {
     fn run(&mut self, weights: &Array2<f64>, gradient: &Array2<f64>) -> Array2<f64> {
         if self.velocity.shape() == &[1, 0] {
             self.velocity = Array2::zeros(weights.dim());
@@ -15,13 +15,11 @@ impl Optimizer for SGD {
     }
 }
 
-impl Default for SGD {
-    fn default() -> SGD {
-        SGD {
-            learning_rate: 0.000001,
-            momentum: 0.6,
-            decay: 0.,
-            nesterov: false,
+impl Default for Momentum {
+    fn default() -> Momentum {
+        Momentum {
+            learning_rate: 0.1,
+            momentum: 0.9,
             velocity: arr2(&[[]])
         }
     }

@@ -5,11 +5,10 @@ pub mod loss_functions;
 pub mod network;
 
 #[derive(Clone)]
-pub struct NeuralNetwork<L, O>
-    where L: layer::LayerTrait<O>,
-          O: optimizers::Optimizer
+pub struct NeuralNetwork<L>
+    where L: layer::LayerTrait
 {
     layers: Vec<L>,
-    optimizer: O,
+    optimizer: optimizers::Optimizer,
     loss_fn: loss_functions::LossFn
 }

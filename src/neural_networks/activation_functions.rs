@@ -1,27 +1,44 @@
 use ndarray::prelude::*;
+use utils::*;
 
 #[derive(Clone)]
 pub enum ActivationFn {
     Linear,
-    Sigmoid
+    Sigmoid,
+    Softmax
 }
 
 impl ActivationFn {
     pub fn run(&self, prediction: &Array2<f64>) -> Array2<f64> {
         match self {
-            ActivationFn::Sigmoid => prediction.map(|x| { 1. / (1. + f64::exp(-x)) }),
             ActivationFn::Linear => prediction.clone(),
+            ActivationFn::Sigmoid => prediction.map(|x| {
+                let mut res = 1. / (1. + f64::exp(-x));
+                res
+            }),
+            ActivationFn::Softmax => {
+                let max = prediction.map_axis(Axis(1), |x| max_arr1(&x))
+                    .into_shape((prediction.shape()[0], 1_usize))
+                    .unwrap();
+                let e_pred = (prediction - &max).map(|x| f64::exp(*x));
+                let sum = e_pred.sum_axis(Axis(1))
+                    .into_shape((prediction.shape()[0], 1_usize))
+                    .unwrap();
+                
+                &e_pred / &sum
+            },
             _ => prediction.clone()
         }
     }
 
     pub fn gradient(&self, prediction: &Array2<f64>) -> Array2<f64> {
         match self {
-            ActivationFn::Sigmoid => {
-                let prediction = self.run(prediction);
-                prediction.map(|x| { x * (1. - x) })
-            },
             ActivationFn::Linear => Array2::ones(prediction.dim()),
+            ActivationFn::Sigmoid |
+            ActivationFn::Softmax => {
+                let prediction = self.run(prediction);
+                (1. - &prediction) * &prediction
+            },
             _ => Array2::ones(prediction.dim())
         }
     }
@@ -29,6 +46,6 @@ impl ActivationFn {
 
 impl Default for ActivationFn {
     fn default() -> Self {
-        ActivationFn::Sigmoid
+        ActivationFn::Linear
     }
 }

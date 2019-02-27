@@ -4,9 +4,7 @@ use super::activation_functions::*;
 
 pub mod dense;
 
-pub trait LayerTrait<O> : Clone
-    where O: Optimizer
-{
+pub trait LayerTrait : Clone {
     fn get_input_shape(&self) -> Vec<usize>;
 
     fn set_input_shape<'a>(&'a mut self, shape: &Vec<usize>) -> &'a mut Self;
@@ -15,9 +13,9 @@ pub trait LayerTrait<O> : Clone
 
     fn set_units<'a>(&'a mut self, units: usize) -> &'a mut Self;
 
-    fn get_optimizer(&self) -> O;
+    fn get_optimizer(&self) -> Optimizer;
 
-    fn set_optimizer<'a>(&'a mut self, optimizer: &O) -> &'a mut Self;
+    fn set_optimizer<'a>(&'a mut self, optimizer: &Optimizer) -> &'a mut Self;
 
     fn get_activation_fn(&self) -> ActivationFn;
 
@@ -35,14 +33,12 @@ pub trait LayerTrait<O> : Clone
 }
 
 #[derive(Clone)]
-pub struct Dense<O>
-    where O: Optimizer
-{
+pub struct Dense {
     input: Array2<f64>,
     output: Array2<f64>,
     input_shape: Vec<usize>,
     units: usize,
     weights: Array2<f64>,
-    optimizer: O,
+    optimizer: Optimizer,
     activation_fn: ActivationFn
 }

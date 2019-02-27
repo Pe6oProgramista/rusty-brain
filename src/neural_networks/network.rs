@@ -6,8 +6,8 @@ use super::layer::LayerTrait;
 use super::optimizers::*;
 use super::loss_functions::*;
 
-impl<L> NeuralNetwork<L, SGD> 
-    where L: LayerTrait<SGD>
+impl<L> NeuralNetwork<L> 
+    where L: LayerTrait
 {
     pub fn new() -> Self {
         Default::default()
@@ -18,21 +18,20 @@ impl<L> NeuralNetwork<L, SGD>
     }
 }
 
-impl<L> Default for NeuralNetwork<L, SGD> 
-    where L: LayerTrait<SGD>
+impl<L> Default for NeuralNetwork<L> 
+    where L: LayerTrait
 {
     fn default() -> Self {
         NeuralNetwork {
             layers: Vec::<L>::new(),
-            optimizer: SGD { ..Default::default() },
+            optimizer: Default::default(),
             loss_fn: Default::default()
         }
     }
 }
 
-impl<L, O> NeuralNetwork<L, O> 
-    where L: LayerTrait<O>,
-          O: Optimizer
+impl<L> NeuralNetwork<L> 
+    where L: LayerTrait
 {
     pub fn get_layers(&self) -> Vec<L> {
         self.layers.clone()
@@ -49,11 +48,11 @@ impl<L, O> NeuralNetwork<L, O>
         self
     }
 
-    pub fn get_optimizer(&self) -> O {
+    pub fn get_optimizer(&self) -> Optimizer {
         self.optimizer.clone()
     }
 
-    pub fn set_optimizer<'a>(&'a mut self, optimizer: &O) -> &'a mut Self {
+    pub fn set_optimizer<'a>(&'a mut self, optimizer: &Optimizer) -> &'a mut Self {
         self.optimizer = optimizer.clone();
         self
     }
@@ -78,7 +77,10 @@ impl<L, O> NeuralNetwork<L, O>
     pub fn fit(&mut self, input: &Array2<f64>, output: &Array2<f64>, batch_size: usize, epochs: usize) {
         let mut errors = Vec::<f64>::new();
         for _ in 0..epochs {
-            errors.push(self.train_on_batch(input, output));
+            let e = self.train_on_batch(input, output);
+            errors.push(e);
+            println!("{:?}", e);
+
             // println!("{}", err);
             // let samples = input.shape()[0];
             // for i in Array::range(0., samples as f64, batch_size as f64).iter() {
