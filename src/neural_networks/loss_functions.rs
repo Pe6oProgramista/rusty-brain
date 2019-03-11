@@ -1,7 +1,8 @@
+use serde_derive::{Serialize, Deserialize};
 use ndarray::prelude::*;
 use ndarray::Zip;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum LossFn {
     MeanSquare,
     CrossEntropy

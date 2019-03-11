@@ -1,7 +1,8 @@
+use serde_derive::{Serialize, Deserialize};
 use ndarray::prelude::*;
 use utils::*;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum ActivationFn {
     Linear,
     Sigmoid,
@@ -13,16 +14,18 @@ impl ActivationFn {
         match self {
             ActivationFn::Linear => prediction.clone(),
             ActivationFn::Sigmoid => prediction.map(|x| {
-                let mut res = 1. / (1. + f64::exp(-x));
+                let res = 1. / (1. + f64::exp(-x));
                 res
             }),
             ActivationFn::Softmax => {
+                let (samples, _) = prediction.dim();
+                
                 let max = prediction.map_axis(Axis(1), |x| max_arr1(&x))
-                    .into_shape((prediction.shape()[0], 1_usize))
+                    .into_shape((samples, 1_usize))
                     .unwrap();
                 let e_pred = (prediction - &max).map(|x| f64::exp(*x));
                 let sum = e_pred.sum_axis(Axis(1))
-                    .into_shape((prediction.shape()[0], 1_usize))
+                    .into_shape((samples, 1_usize))
                     .unwrap();
                 
                 &e_pred / &sum

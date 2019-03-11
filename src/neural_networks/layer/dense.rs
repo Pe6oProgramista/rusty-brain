@@ -1,27 +1,33 @@
+use serde_derive::{Serialize, Deserialize};
 use ndarray::prelude::*;
 use ndarray::Zip;
 use rand::prelude::*;
 
-use super::{LayerTrait, Dense};
-use neural_networks::optimizers::*;
-use neural_networks::activation_functions::*;
+use super::*;
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Dense {
+    input: Array2<f64>,
+    output: Array2<f64>,
+    inputs_cnt: usize,
+    units: usize,
+    weights: Array2<f64>,
+    optimizer: Optimizer,
+    activation_fn: ActivationFn
+}
 
 impl Dense {
     pub fn new() -> Self {
         Default::default()
     }
-
-    pub fn build(&self) -> Self {
-        self.clone()
-    }
 }
 
 impl Default for Dense {
-    fn default<'a>() -> Self {
+    fn default() -> Self {
         Dense {
             input: arr2(&[[]]),
             output: arr2(&[[]]),
-            input_shape: Vec::new(),
+            inputs_cnt: 0,
             units: 0,
             weights: arr2(&[[]]),
             optimizer: Default::default(),
@@ -30,26 +36,26 @@ impl Default for Dense {
     }
 }
 
-impl LayerTrait for Dense {
-    fn get_input_shape(&self) -> Vec<usize> {
-        self.input_shape.clone()
+#[typetag::serde(name = "dense")]
+impl Layer for Dense {
+    fn build(&self) -> Box<Layer> {
+        Box::new(self.clone())
     }
 
-    fn set_input_shape<'a>(&'a mut self, shape: &Vec<usize>) -> &'a mut Self {
-        self.input_shape = shape.clone();
-        self.input_shape[1] += 1;
+    fn get_inputs_cnt(&self) -> usize {
+        self.inputs_cnt
+    }
+
+    fn set_inputs_cnt(&mut self, inputs_cnt: usize) -> &mut Layer {
+        self.inputs_cnt = inputs_cnt + 1;
         self
     }
 
-    fn get_output_shape(&self) -> Vec<usize> {
-        let mut output_shape = self.input_shape.clone();
-        if let Some(last) = output_shape.last_mut() {
-            *last = self.units;
-        }
-        output_shape
+    fn get_units(&self) -> usize {
+        self.units
     }
 
-    fn set_units<'a>(&'a mut self, units: usize) -> &'a mut Self {
+    fn set_units(&mut self, units: usize) -> &mut Layer {
         self.units = units;
         self
     }
@@ -58,7 +64,7 @@ impl LayerTrait for Dense {
         self.optimizer.clone()
     }
 
-    fn set_optimizer<'a>(&'a mut self, optimizer: &Optimizer) -> &'a mut Self {
+    fn set_optimizer(&mut self, optimizer: &Optimizer) -> &mut Layer {
         self.optimizer = optimizer.clone();
         self
     }
@@ -67,7 +73,7 @@ impl LayerTrait for Dense {
         self.activation_fn.clone()
     }
 
-    fn set_activation_fn<'a>(&'a mut self, activation_fn: &ActivationFn) -> &'a mut Self {
+    fn set_activation_fn(&mut self, activation_fn: &ActivationFn) -> &mut Layer {
         self.activation_fn = activation_fn.clone();
         self
     }
@@ -76,13 +82,13 @@ impl LayerTrait for Dense {
         self.weights.clone()
     }
 
-    fn init_weights<'a>(&'a mut self) -> &'a mut Self {
-        if(self.input_shape != vec![]) { 
-            self.weights = unsafe { Array2::<f64>::uninitialized((self.units, self.input_shape[1])) };
+    fn init_weights(&mut self) -> &mut Layer {
+        if self.inputs_cnt != 0 { 
+            self.weights = unsafe { Array2::<f64>::uninitialized((self.units, self.inputs_cnt)) };
             Zip::from(&mut self.weights).apply(|x| *x = 2. * random::<f64>() - 1.);
             
-            // self.weights = Array::linspace(-1., 1., self.units * self.input_shape[1])
-            //     .into_shape((self.units, self.input_shape[1]))
+            // self.weights = Array::linspace(-1., 1., self.units * self.inputs_cnt)
+            //     .into_shape((self.units, self.inputs_cnt))
             //     .unwrap();
         }
         self
@@ -95,8 +101,8 @@ impl LayerTrait for Dense {
     fn forward_prop(&mut self, input: &Array2<f64>) -> Array2<f64> {
         let input = stack!(Axis(1), Array2::ones((input.shape()[0], 1)), *input);
 
-        assert!(input.shape()[1] == self.input_shape[1],
-            "input isn't with same shape as input_shape {:?} {:?}", input.shape(), self.input_shape);
+        assert!(input.shape()[1] == self.inputs_cnt,
+            "input isn't with same shape as inputs_cnt {:?} {:?}", input.shape(), self.inputs_cnt);
         assert!(self.units == self.weights.shape()[0] && input.shape()[1] == self.weights.shape()[1],
             "weight isn't with the same shape as input and output: u{:?} - in{:?} - w{:?}", self.units, input.shape(), self.weights.shape());
 

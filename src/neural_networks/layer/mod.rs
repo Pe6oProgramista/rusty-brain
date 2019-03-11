@@ -4,26 +4,29 @@ use super::activation_functions::*;
 
 pub mod dense;
 
-pub trait LayerTrait : Clone {
-    fn get_input_shape(&self) -> Vec<usize>;
+#[typetag::serde(tag = "type")]
+pub trait Layer : LayerClone {
+    fn build(&self) -> Box<Layer>;
 
-    fn set_input_shape<'a>(&'a mut self, shape: &Vec<usize>) -> &'a mut Self;
+    fn get_inputs_cnt(&self) -> usize;
 
-    fn get_output_shape(&self) -> Vec<usize>;
+    fn set_inputs_cnt(&mut self, shape: usize) -> &mut Layer;
 
-    fn set_units<'a>(&'a mut self, units: usize) -> &'a mut Self;
+    fn get_units(&self) -> usize;
+
+    fn set_units(&mut self, units: usize) -> &mut Layer;
 
     fn get_optimizer(&self) -> Optimizer;
 
-    fn set_optimizer<'a>(&'a mut self, optimizer: &Optimizer) -> &'a mut Self;
+    fn set_optimizer(&mut self, optimizer: &Optimizer) -> &mut Layer;
 
     fn get_activation_fn(&self) -> ActivationFn;
 
-    fn set_activation_fn<'a>(&'a mut self, activation_fn: &ActivationFn) -> &'a mut Self;
+    fn set_activation_fn(&mut self, activation_fn: &ActivationFn) -> &mut Layer;
 
     fn get_weights(&self) -> Array2<f64>;
 
-    fn init_weights<'a>(&'a mut self) -> &'a mut Self;
+    fn init_weights(&mut self) -> &mut Layer;
 
     fn parameters(&self) -> usize;
 
@@ -32,13 +35,21 @@ pub trait LayerTrait : Clone {
     fn backward_prop(&mut self, gradient: &Array2<f64>) -> Array2<f64>;
 }
 
-#[derive(Clone)]
-pub struct Dense {
-    input: Array2<f64>,
-    output: Array2<f64>,
-    input_shape: Vec<usize>,
-    units: usize,
-    weights: Array2<f64>,
-    optimizer: Optimizer,
-    activation_fn: ActivationFn
+pub trait LayerClone {
+    fn clone_box(&self) -> Box<Layer>;
+}
+
+impl<L> LayerClone for L
+where
+    L: 'static + Layer + Clone,
+{
+    fn clone_box(&self) -> Box<Layer> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<Layer> {
+    fn clone(&self) -> Box<Layer> {
+        self.clone_box()
+    }
 }
