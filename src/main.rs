@@ -1,119 +1,121 @@
-extern crate regex;
 #[macro_use]
 extern crate ndarray;
+extern crate regex;
 extern crate rand;
-
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use regex::Regex;
-use ndarray::prelude::*;
-use rand::prelude::*;
-
-pub mod supervised;
-use supervised::regression as rg;
+extern crate plotlib;
+extern crate serde;
+extern crate serde_derive;
+extern crate serde_json;
+extern crate typetag;
 
 pub mod neural_networks;
+pub mod file_reader;
+pub mod utils;
+
+use ndarray::*;
+
 use neural_networks::*;
 use neural_networks::layer::*;
+use neural_networks::layer::dense::*;
 use neural_networks::optimizers::*;
 use neural_networks::activation_functions::*;
 use neural_networks::loss_functions::*;
+use file_reader::*;
 
-pub mod utils;
-use utils::*;
+use plotlib::scatter::Scatter;
+use plotlib::scatter;
+use plotlib::style::{Marker, Point, Line};
+use plotlib::view:: {ContinuousView, CategoricalView};
+use plotlib::page::Page;
+use plotlib::line;
+use plotlib::boxplot::BoxPlot;
+use plotlib::grid::Grid;
+use plotlib::view::View;
 
 fn main() {
+    // let dots = [(0., 1.), (2., 3.), (4., 5.), (6., 7.), (8., 9.)];
+    // let s = Scatter::from_slice(&dots)
+    //     .style(scatter::Style::new()
+    //         .marker(Marker::Square)
+    //         .colour("#35C788"));
+
+    // let b1 = BoxPlot::from_slice(&[9., 12., 14., 15., 16., 17.]).label("ZDRR");
+    // let b2 = BoxPlot::from_vec(vec![0., 2., 3., 4.]);
+    // let mut v = CategoricalView::new().add(&b1);
+    // Page::single(&v).save("scatter.svg");
+
     let mut network = NeuralNetwork::new().set_optimizer(&Optimizer::Momentum(Default::default())).set_loss_fn(&LossFn::CrossEntropy).build();
-    network.add(Dense::new().set_input_shape(&vec![149, 4]).set_units(5).set_activation_fn(&ActivationFn::Softmax).build());
+    network.add(Dense::new().set_inputs_cnt(4).set_units(5).set_activation_fn(&ActivationFn::Softmax).build());
     network.add(Dense::new().set_units(3).set_activation_fn(&ActivationFn::Softmax).build());
 
-    let (input, output) = get_data();
-    network.fit(&input, &output, 26, 1_000);// 1-Iris-setosa 2-Iris-versicolor 3-Iris-virginica
-
-    // let test_in = arr2(&[[0.04741, 0.00, 11.930, 0., 0.5730, 6.0300, 80.80, 2.5050, 1., 273.0, 21.00, 396.90, 7.88]]);
-    // let test_in2 = arr2(&[[0.06860, 0.00, 2.890, 0., 0.4450, 7.4160, 62.50, 3.4952, 2., 276.0, 18.00, 396.90, 6.19]]);
-    // let test_out = 11.90;
-    // let test_out2 = 33.20;
-    // let p = network.predict(&test_in);
-    // println!("{} ----> {}", test_out, p);
+    let (input, output) = FileReader::new("./datasets/iris.data", ",").get_data(4);
+    let _error = network.fit(&input, &output, 149, 1_000); // 1-Iris-setosa 2-Iris-versicolor 3-Iris-virginica
 
     let test_in = arr2(&[[4.4,2.9,1.4,0.2]]); // 4.4,2.9,1.4,0.2 - [1 0 0]  5.9,3.0,5.1,1.8 - [0 0 1]  7.0,3.2,4.7,1.4 - [0 1 0]
     let test_out = arr2(&[[1,0,0]]);
-    let p = network.predict(&test_in);
-    println!("{:?}", p);
-}
+    
+    let _serialized = network.save("./models/classification.json").unwrap();
 
-fn get_data() -> (Array2<f64>, Array2<f64>) {
-    let path = Path::new("./src/datasets/housing.data");
-    let display = path.display();
-    let mut file = match File::open(&path) {
-            Err(why) => panic!("couldn't open {}: {}",display, why),
-            Ok(file) => file,
-        };
+    let mut model = NeuralNetwork::from_json("./models/classification.json");
+    let p = model.predict(&test_in);
+    println!("{} ----> {}", test_out, p);
 
-    let mut s = String::new();
-    match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read: {}", why),
-        Ok(_) => {},
+    {
+        // network.set_optimizer(&Optimizer::Momentum(Momentum {
+        //         learning_rate: 0.1,
+        //         momentum: 0.,
+        //         velocity: arr2(&[[]])
+        //     }));
+
+        // let gd_e = network.fit(&input, &output, 149, 1000);
+
+        // let sgd_e = network.fit(&input, &output, 15, 1000);
+
+        // network.set_optimizer(&Optimizer::Momentum(Default::default()));
+        // let momentum_e = network.fit(&input, &output, 15, 1000);
+
+        // network.set_optimizer(&Optimizer::Adagrad(Default::default()));
+        // let adagrad_e = network.fit(&input, &output, 15, 1000);
+
+        // network.set_optimizer(&Optimizer::Adadelta(Default::default()));
+        // let adadelta_e = network.fit(&input, &output, 15, 1000);
+
+        // let mut dots = Vec::new();
+        // let mut iters: Vec<f64> = (0..1000).map(|x| x as f64).collect();
+
+
+        // dots = iters.iter().zip(gd_e.iter()).map(|(x, y)| (*x, *y)).collect();
+        // let gd = line::Line::new(&dots)
+        //     .style(line::Style::new()
+        //         .colour("red"));
+
+        // dots = iters.iter().zip(sgd_e.iter()).map(|(x, y)| (*x, *y)).collect();
+        // let sgd = line::Line::new(&dots)
+        //     .style(line::Style::new()
+        //         .colour("green"));
+
+        // dots = iters.iter().zip(momentum_e.iter()).map(|(x, y)| (*x, *y)).collect();
+        // let momentum = line::Line::new(&dots)
+        //     .style(line::Style::new()
+        //         .colour("blue"));
+
+        // dots = iters.iter().zip(adagrad_e.iter()).map(|(x, y)| (*x, *y)).collect();
+        // let adagrad = line::Line::new(&dots)
+        //     .style(line::Style::new()
+        //         .colour("yellow"));
+
+        // dots = iters.iter().zip(adadelta_e.iter()).map(|(x, y)| (*x, *y)).collect();
+        // let adadelta = line::Line::new(&dots)
+        //     .style(line::Style::new()
+        //         .colour("pink"));
+
+        // let mut v = ContinuousView::new()
+        // .add(&gd)
+        // .add(&sgd)
+        // .add(&momentum)
+        // .add(&adagrad)
+        // .add(&adadelta);
+
+        // Page::empty().add_plot(&v).save("scatter.svg");
     }
-    let re = Regex::new(r"[\t ]+").unwrap();
-
-    let mut vec: Vec<Vec<f64>> = Vec::new();
-    for v in s.split('\n').collect::<Vec<&str>>().iter() {
-        vec.push(re.split(v.trim()).map(|s| s.parse::<f64>().unwrap()).collect());
-    }
-
-    let mut data = Array2::<f64>::zeros((vec.len(), vec[0].len()));
-    for i in 0..vec.len() {
-        for j in 0..vec[0].len() {
-            data[[i, j]] = vec[i][j];
-        }
-    }
-    let data = data;
-
-    let mut inputs = Array2::<f64>::ones((data.shape()[0], 13));
-    let mut outputs = Array2::<f64>::ones((data.shape()[0], 1));
-
-    inputs.assign(&data.slice(s![.., 0..13]));
-    outputs.assign(&data.slice(s![.., 13..]));
-
-    (inputs, outputs)
-}
-
-fn get_data2() -> (Array2<f64>, Array2<f64>) {
-    let path = Path::new("./src/datasets/iris.data");
-    let display = path.display();
-    let mut file = match File::open(&path) {
-            Err(why) => panic!("couldn't open {}: {}",display, why),
-            Ok(file) => file,
-        };
-
-    let mut s = String::new();
-    match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read: {}", why),
-        Ok(_) => {},
-    }
-    let re = Regex::new(r",").unwrap();
-
-    let mut vec: Vec<Vec<f64>> = Vec::new();
-    for v in s.split('\n').collect::<Vec<&str>>().iter() {
-        vec.push(re.split(v.trim()).map(|s| s.parse::<f64>().unwrap()).collect());
-    }
-
-    let mut data = Array2::<f64>::zeros((vec.len(), vec[0].len()));
-    for i in 0..vec.len() {
-        for j in 0..vec[0].len() {
-            data[[i, j]] = vec[i][j];
-        }
-    }
-    let data = data;
-
-    let mut inputs = Array2::<f64>::ones((data.shape()[0], 4));
-    let mut outputs = Array2::<f64>::ones((data.shape()[0], 3));
-
-    inputs.assign(&data.slice(s![.., 0..4]));
-    outputs.assign(&data.slice(s![.., 4..]));
-
-    (inputs, outputs)
 }
