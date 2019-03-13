@@ -3,16 +3,10 @@ extern crate ndarray;
 
 use ndarray::prelude::*;
 
-use rusty_brain::neural_networks::*;
-use rusty_brain::neural_networks::layer::*;
-use rusty_brain::neural_networks::layer::dense::*;
-use rusty_brain::neural_networks::optimizers::*;
-use rusty_brain::neural_networks::activation_functions::*;
-use rusty_brain::neural_networks::loss_functions::*;
-use rusty_brain::file_reader::*;
+use rusty_brain::*;
 
 fn main() {
-    let mut network = NeuralNetwork::new().set_optimizer(&Optimizer::Momentum(Default::default())).set_loss_fn(&LossFn::CrossEntropy).build();
+    let mut network = NeuralNetwork::new().set_optimizer(&Optimizer::RMSProp(Default::default())).set_loss_fn(&LossFn::CrossEntropy).build();
     network.add(Dense::new().set_inputs_cnt(4).set_units(5).set_activation_fn(&ActivationFn::Softmax).build());
     network.add(Dense::new().set_units(3).set_activation_fn(&ActivationFn::Softmax).build());
 

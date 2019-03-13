@@ -6,6 +6,7 @@ pub mod nesterov_momentum;
 pub mod adagrad;
 pub mod adadelta;
 pub mod adam;
+pub mod rms_prop;
 
 pub trait IsOptimizer : Clone {
     fn run(&mut self, weights: &Array2<f64>, gradient: &Array2<f64>) -> Array2<f64>;
@@ -43,10 +44,21 @@ pub struct Adadelta {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Adam {
+    pub learning_rate: f64,
+    pub epsilon: f64,
+    pub b1: f64,
+    pub b2: f64,
+    pub m: Array2<f64>,
+    pub v: Array2<f64>,
+    pub velocity: Array2<f64>
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct RMSProp {
+    pub learning_rate: f64,
     pub epsilon: f64,
     pub rho: f64,
     pub e_gradient: Array2<f64>,
-    pub e_velocity: Array2<f64>,
     pub velocity: Array2<f64>
 }
 
@@ -56,7 +68,8 @@ pub enum Optimizer {
     NesterovMomentum(NesterovMomentum),
     Adagrad(Adagrad),
     Adadelta(Adadelta),
-    Adam(Adam)
+    Adam(Adam),
+    RMSProp(RMSProp)
 }
 
 macro_rules! use_Optimizer {(
@@ -69,6 +82,7 @@ macro_rules! use_Optimizer {(
             Optimizer::Adagrad($pat) => { $($body)* },
             Optimizer::Adadelta($pat) => { $($body)* },
             Optimizer::Adam($pat) => { $($body)* }
+            Optimizer::RMSProp($pat) => { $($body)* }
         }
     })
 }
