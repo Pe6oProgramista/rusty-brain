@@ -7,7 +7,7 @@ use rusty_brain::*;
 
 fn main() {
     let mut network = NeuralNetwork::new().set_optimizer(&Optimizer::RMSProp(Default::default())).set_loss_fn(&LossFn::CrossEntropy).build();
-    network.add(Dense::new().set_inputs_cnt(4).set_units(5).set_activation_fn(&ActivationFn::Softmax).build());
+    network.add(Dense::new().set_inputs_cnt(4).set_units(5).set_activation_fn(&ActivationFn::Relu).build());
     network.add(Dense::new().set_units(3).set_activation_fn(&ActivationFn::Softmax).build());
 
     let (input, output) = FileReader::new("./datasets/iris.data", ",").get_data(4);

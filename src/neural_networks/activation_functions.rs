@@ -6,7 +6,8 @@ use utils::*;
 pub enum ActivationFn {
     Linear,
     Sigmoid,
-    Softmax
+    Softmax,
+    Relu
 }
 
 impl ActivationFn {
@@ -30,6 +31,9 @@ impl ActivationFn {
                 
                 &e_pred / &sum
             },
+            ActivationFn::Relu => {
+                prediction.map(|x| if *x > 0. {*x} else {0.})
+            },
             _ => prediction.clone()
         }
     }
@@ -41,6 +45,9 @@ impl ActivationFn {
             ActivationFn::Softmax => {
                 let prediction = self.run(prediction);
                 (1. - &prediction) * &prediction
+            },
+            ActivationFn::Relu => {
+                prediction.map(|x| if *x > 0. {1.} else {0.})
             },
             _ => Array2::ones(prediction.dim())
         }
