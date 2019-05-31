@@ -7,7 +7,7 @@ impl IsOptimizer for Momentum {
             self.velocity = Array2::zeros(weights.dim());
         }
 
-        assert!(self.momentum >= 0. && self.momentum <= 1., "momentum not in range [0, 1]");
+        assert!(self.momentum >= 0. && self.momentum <= 1., "momentum is not in range [0, 1]");
 
         self.velocity = self.momentum * &self.velocity - self.learning_rate * gradient;
 

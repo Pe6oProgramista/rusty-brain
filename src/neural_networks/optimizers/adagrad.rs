@@ -8,7 +8,7 @@ impl IsOptimizer for Adagrad {
         }
 
         self.g = gradient.mapv(|x: f64| x.powi(2)) + &self.g;
-        let velocity = - self.learning_rate * gradient / (self.epsilon + &self.g).mapv(|x: f64| x.sqrt());
+        let velocity = - self.learning_rate * gradient / (self.epsilon + &self.g.mapv(|x: f64| x.sqrt()));
 
         return weights + &velocity
     }

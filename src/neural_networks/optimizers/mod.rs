@@ -50,6 +50,7 @@ pub struct Adam {
     pub b2: f64,
     pub m: Array2<f64>,
     pub v: Array2<f64>,
+    pub t: i32,
     pub velocity: Array2<f64>
 }
 
