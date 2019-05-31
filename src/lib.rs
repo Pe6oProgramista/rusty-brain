@@ -7,11 +7,13 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate typetag;
+extern crate gnuplot;
 
 pub mod neural_networks;
 pub mod file_reader;
 pub mod utils;
 
+pub use crate::utils::{plot_data, plot_error};
 pub use crate::file_reader::*;
 pub use crate::neural_networks::*;
 pub use crate::neural_networks::layer::*;
