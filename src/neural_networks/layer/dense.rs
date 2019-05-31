@@ -94,6 +94,11 @@ impl Layer for Dense {
         self
     }
 
+    fn set_weights(&mut self, weights: &Array2<f64>) -> &mut Layer {
+        self.weights = weights.clone();
+        self
+    }
+
     fn parameters(&self) -> usize {
         self.weights.shape().iter().fold(1,|acc, &x| acc * x)
     }

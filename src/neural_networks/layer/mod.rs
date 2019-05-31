@@ -28,6 +28,8 @@ pub trait Layer : LayerClone {
 
     fn init_weights(&mut self) -> &mut Layer;
 
+    fn set_weights(&mut self, weights: &Array2<f64>) -> &mut Layer;
+
     fn parameters(&self) -> usize;
 
     fn forward_prop(&mut self, input: &Array2<f64>) -> Array2<f64>;
